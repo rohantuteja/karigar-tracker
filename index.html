@@ -75,6 +75,7 @@ select:focus,input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106
 .sp.dk{border-color:rgba(0,0,0,.12);border-top-color:var(--gr);width:18px;height:18px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:26px 14px;color:var(--t2);font-size:14px}
+.info{font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.6;background:var(--grl);border-radius:var(--r);padding:10px 12px;}
 @media(max-width:540px){.frow{grid-template-columns:1fr}.mg{grid-template-columns:1fr 1fr}.wrap{padding:14px 12px 80px}.tb{font-size:11px;padding:8px 3px}}
 </style>
 </head>
@@ -99,7 +100,7 @@ select:focus,input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106
       <div class="ct"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.89 3 3 3.9 3 5v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>Log Production Entry</div>
       <div class="frow">
         <div class="field"><label class="lbl">Date</label><input type="date" id="e-date"/></div>
-        <div class="field"><label class="lbl">Karigar</label><select id="e-kar"><option value="">Select karigar...</option></select></div>
+        <div class="field"><label class="lbl">Karigar</label><select id="e-kar"><option value="">Loading...</option></select></div>
       </div>
       <div class="shd"><span>SKU / Style</span><span style="text-align:center">Qty</span><span></span></div>
       <div id="sku-rows"></div>
@@ -143,17 +144,15 @@ select:focus,input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106
   <div id="sec-manage" class="sec">
     <div class="card">
       <div class="ct"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3z"/></svg>Karigars</div>
-      <div id="k-list"></div>
+      <div class="info">Karigars are saved in your Google Sheet. They will be the same on every device.</div>
+      <div id="k-list"><div class="empty">Loading...</div></div>
       <div class="iadd"><input type="text" id="new-k" placeholder="Karigar name..."/><button class="btn pr" onclick="addK()">Add</button></div>
     </div>
     <div class="card">
       <div class="ct"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>SKUs / Styles</div>
-      <div id="s-list"></div>
+      <div class="info">SKUs are saved in your Google Sheet. They will be the same on every device.</div>
+      <div id="s-list"><div class="empty">Loading...</div></div>
       <div class="iadd"><input type="text" id="new-s" placeholder="SKU / Style name..."/><button class="btn pr" onclick="addS()">Add</button></div>
-    </div>
-    <div class="card" style="border-color:#F5C6C2">
-      <div class="ct" style="color:var(--rd)"><svg viewBox="0 0 24 24" style="fill:var(--rd)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Danger Zone</div>
-      <button class="btn xs dr" onclick="clearLocal()">Reset local settings (karigar and SKU lists only)</button>
     </div>
   </div>
 </div>
@@ -167,22 +166,20 @@ select:focus,input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106
 </div>
 <div class="toast" id="toast"></div>
 <script>
-var SURL='https://script.google.com/macros/s/AKfycbz35nz3yhaxGdJI_hkOTRZrS5D7dVkTKMLLMwiJwAfnAlEjLlnP8l3tIRzjx-L6ireJXw/exec';
-var karigars=JSON.parse(localStorage.getItem('pt-k')||'["Karigar A","Karigar B","Karigar C"]');
-var skus=JSON.parse(localStorage.getItem('pt-s')||'["SKU A","SKU B","SKU C"]');
-var srN=0,editEnt=null,_cbn=0,_tt;
+var SURL='https://script.google.com/macros/s/AKfycbyT-15eoeega6_GueGiK3-NhuBEZYLIk3-UpWt7uo7ff5wyUJIadDD-xt688PKA6jFA_w/exec';
+var karigars=[],skus=[],srN=0,editEnt=null,_cbn=0,_tt;
 
 function api(p,cb){
-  var n='_cb'+(++_cbn); p.callback=n;
+  var n='_cb'+(++_cbn);p.callback=n;
   var qs=Object.keys(p).map(function(k){var v=p[k];if(typeof v==='object')v=JSON.stringify(v);return encodeURIComponent(k)+'='+encodeURIComponent(v);}).join('&');
-  var s=document.createElement('script'); s.src=SURL+'?'+qs;
+  var s=document.createElement('script');s.src=SURL+'?'+qs;
   window[n]=function(d){delete window[n];if(s.parentNode)document.body.removeChild(s);cb(null,d);};
   s.onerror=function(){delete window[n];if(s.parentNode)document.body.removeChild(s);cb(new Error('fail'));};
   document.body.appendChild(s);
 }
 
 function td(){return new Date().toISOString().slice(0,10);}
-function ini(n){return (n||'').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase()||'?';}
+function ini(n){return(n||'').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase()||'?';}
 function fmt(s){if(!s)return'';var d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -211,17 +208,30 @@ function init(){
   var f=new Date();f.setDate(f.getDate()-30);
   document.getElementById('h-from').value=f.toISOString().slice(0,10);
   document.getElementById('h-to').value=t;
-  fillKDrop();addSR();ping();loadToday();
+  // Load lists from Sheet first, then init UI
+  api({action:'ping'},function(err,r){
+    var dot=document.getElementById('dot'),txt=document.getElementById('ctxt');
+    if(!err&&r&&r.status==='ok'){dot.className='dot ok';txt.textContent='Connected to Sheet';}
+    else{dot.className='dot err';txt.textContent='Connection error';}
+  });
+  loadLists(function(){
+    addSR();
+    loadToday();
+  });
   document.getElementById('e-date').addEventListener('change',function(){
     document.getElementById('tlbl').textContent=fmt(this.value);loadToday();
   });
 }
 
-function ping(){
-  api({action:'ping'},function(err,r){
-    var dot=document.getElementById('dot'),txt=document.getElementById('ctxt');
-    if(!err&&r&&r.status==='ok'){dot.className='dot ok';txt.textContent='Connected to Sheet';}
-    else{dot.className='dot err';txt.textContent='Connection error';}
+// ── LISTS FROM SHEET ──────────────────────────────────────────
+function loadLists(cb){
+  api({action:'getLists'},function(err,r){
+    if(!err&&r&&r.status==='ok'){
+      karigars=r.karigars||[];
+      skus=r.skus||[];
+    }
+    fillKDrop();
+    if(cb)cb();
   });
 }
 
@@ -342,8 +352,7 @@ function loadDash(){
   if(!dateEl.value)dateEl.value=td();
   var date=dateEl.value;
   document.getElementById('dash-m').innerHTML='<div class="mc"><div class="mv"><span class="sp dk"></span></div><div class="ml">Loading...</div></div><div class="mc"></div><div class="mc"></div>';
-  document.getElementById('dash-k').innerHTML='';
-  document.getElementById('dash-s').innerHTML='';
+  document.getElementById('dash-k').innerHTML='';document.getElementById('dash-s').innerHTML='';
   api({action:'getByDate',date:date},function(err,r){
     var entries=(r&&r.entries)?r.entries:[];
     var total=0;entries.forEach(function(e){e.items.forEach(function(i){total+=i.qty;});});
@@ -403,29 +412,53 @@ function refreshVisible(){
 }
 
 function renderManage(){
-  document.getElementById('k-list').innerHTML=karigars.length
-    ?karigars.map(function(k,i){return '<div class="mli"><div style="display:flex;align-items:center;gap:9px"><div class="av" style="width:28px;height:28px;font-size:10px">'+ini(k)+'</div>'+esc(k)+'</div><button class="btn xs dr" onclick="removeK('+i+')">Remove</button></div>';}).join('')
-    :'<div style="font-size:13px;color:var(--t3);padding:8px 0">None yet.</div>';
-  document.getElementById('s-list').innerHTML=skus.length
-    ?skus.map(function(s,i){return '<div class="mli"><span class="tag">'+esc(s)+'</span><button class="btn xs dr" onclick="removeS('+i+')">Remove</button></div>';}).join('')
-    :'<div style="font-size:13px;color:var(--t3);padding:8px 0">None yet.</div>';
+  loadLists(function(){
+    document.getElementById('k-list').innerHTML=karigars.length
+      ?karigars.map(function(k,i){return '<div class="mli"><div style="display:flex;align-items:center;gap:9px"><div class="av" style="width:28px;height:28px;font-size:10px">'+ini(k)+'</div>'+esc(k)+'</div><button class="btn xs dr" onclick="removeK(\''+esc(k)+'\')">Remove</button></div>';}).join('')
+      :'<div style="font-size:13px;color:var(--t3);padding:8px 0">No karigars yet. Add one below.</div>';
+    document.getElementById('s-list').innerHTML=skus.length
+      ?skus.map(function(s){return '<div class="mli"><span class="tag">'+esc(s)+'</span><button class="btn xs dr" onclick="removeS(\''+esc(s)+'\')">Remove</button></div>';}).join('')
+      :'<div style="font-size:13px;color:var(--t3);padding:8px 0">No SKUs yet. Add one below.</div>';
+  });
 }
 
 function addK(){
   var n=document.getElementById('new-k').value.trim();if(!n)return;
-  if(karigars.indexOf(n)>-1){toast('Already exists','error');return;}
-  karigars.push(n);localStorage.setItem('pt-k',JSON.stringify(karigars));
-  document.getElementById('new-k').value='';fillKDrop();renderManage();toast(n+' added');
+  api({action:'addKarigar',name:n},function(err,r){
+    if(!err&&r&&r.status==='ok'){
+      document.getElementById('new-k').value='';
+      toast(n+' added');
+      loadLists(function(){renderManage();});
+    }else{toast(r&&r.message?r.message:'Error','error');}
+  });
 }
-function removeK(i){karigars.splice(i,1);localStorage.setItem('pt-k',JSON.stringify(karigars));fillKDrop();renderManage();}
+
+function removeK(name){
+  if(!confirm('Remove karigar: '+name+'?'))return;
+  api({action:'removeKarigar',name:name},function(err,r){
+    if(!err&&r&&r.status==='ok'){toast('Removed');loadLists(function(){renderManage();});}
+    else toast('Error','error');
+  });
+}
+
 function addS(){
   var n=document.getElementById('new-s').value.trim();if(!n)return;
-  if(skus.indexOf(n)>-1){toast('Already exists','error');return;}
-  skus.push(n);localStorage.setItem('pt-s',JSON.stringify(skus));
-  document.getElementById('new-s').value='';renderManage();toast(n+' added');
+  api({action:'addSku',name:n},function(err,r){
+    if(!err&&r&&r.status==='ok'){
+      document.getElementById('new-s').value='';
+      toast(n+' added');
+      loadLists(function(){renderManage();});
+    }else{toast(r&&r.message?r.message:'Error','error');}
+  });
 }
-function removeS(i){skus.splice(i,1);localStorage.setItem('pt-s',JSON.stringify(skus));renderManage();}
-function clearLocal(){if(!confirm('Reset lists? Sheet data will NOT be deleted.'))return;localStorage.clear();location.reload();}
+
+function removeS(name){
+  if(!confirm('Remove SKU: '+name+'?'))return;
+  api({action:'removeSku',name:name},function(err,r){
+    if(!err&&r&&r.status==='ok'){toast('Removed');loadLists(function(){renderManage();});}
+    else toast('Error','error');
+  });
+}
 
 init();
 </script>
