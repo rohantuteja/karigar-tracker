@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Karigar Production Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#F7F5F0;--surface:#fff;--border:#E2DDD6;--border-s:#C8C2B8;
+  --text:#1A1814;--t2:#6B6560;--t3:#9E9890;
+  --green:#2D6A4F;--green-l:#E8F4EE;--green-t:#1A4A33;
+  --red:#C0392B;--red-l:#FDEDEB;
+  --r:10px;--rl:14px;
+  --sh:0 1px 3px rgba(0,0,0,.06);
+  --shm:0 4px 16px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-ico{width:34px;height:34px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.brand-ico svg{width:18px;height:18px;fill:#fff}
+.brand-name{font-size:16px;font-weight:600}
+.brand-sub{font-size:11px;color:var(--t2)}
+.conn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}
+.dot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .3s}
+.dot.ok{background:#27AE60}.dot.err{background:var(--red)}
+.wrap{max-width:860px;margin:0 auto;padding:24px 18px 80px}
+.tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:4px;margin-bottom:22px;box-shadow:var(--sh)}
+.tb{flex:1;padding:9px 8px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;border:none;border-radius:9px;background:transparent;color:var(--t2);cursor:pointer;transition:all .15s;text-align:center}
+.tb:hover{color:var(--text);background:var(--bg)}
+.tb.active{background:var(--green);color:#fff}
+.sec{display:none}.sec.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:22px;margin-bottom:16px;box-shadow:var(--sh)}
+.card-title{font-size:14px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.card-title svg{width:15px;height:15px;fill:var(--green)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:5px}
+.lbl{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.06em}
+select,input[type=date],input[type=text],input[type=number]{height:40px;padding:0 12px;font-size:14px;font-family:'DM Sans',sans-serif;border:1px solid var(--border-s);border-radius:var(--r);background:var(--bg);color:var(--text);width:100%;transition:border-color .15s,box-shadow .15s}
+select:focus,input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(45,106,79,.12);background:#fff}
+.sku-hd{display:grid;grid-template-columns:1fr 90px 34px;gap:8px;margin-bottom:5px}
+.sku-hd span{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em}
+.sku-r{display:grid;grid-template-columns:1fr 90px 34px;gap:8px;margin-bottom:8px;align-items:center}
+.sku-r input[type=number]{text-align:center}
+.btn{height:40px;padding:0 18px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;border-radius:var(--r);cursor:pointer;border:1px solid var(--border-s);background:var(--surface);color:var(--text);transition:all .12s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--bg)}
+.btn.primary{background:var(--green);color:#fff;border-color:transparent}
+.btn.primary:hover{background:#235C42}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed}
+.btn.danger{color:var(--red);border-color:#F5C6C2}
+.btn.danger:hover{background:var(--red-l)}
+.btn.sm{height:32px;padding:0 12px;font-size:13px}
+.btn.xs{height:28px;padding:0 10px;font-size:12px}
+.ico-btn{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:var(--r);background:transparent;cursor:pointer;color:var(--t2);font-size:18px;transition:all .12s}
+.ico-btn:hover{background:var(--red-l);color:var(--red);border-color:#F5C6C2}
+.add-sku-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--green);font-weight:500;font-family:'DM Sans',sans-serif;border:1.5px dashed #A8D5BB;background:var(--green-l);border-radius:var(--r);padding:9px 14px;cursor:pointer;width:100%;margin:4px 0 18px;transition:all .12s}
+.add-sku-btn:hover{background:#D6EDE2}
+.mgrp{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.mcard{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.mval{font-size:28px;font-weight:600;letter-spacing:-.5px}
+.mlbl{font-size:12px;color:var(--t2);margin-top:3px}
+.bar-row{margin-bottom:14px}
+.bar-info{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+.bar-name{font-weight:500}.bar-v{color:var(--t2)}
+.bar-track{height:7px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;background:var(--green);border-radius:4px;transition:width .5s}
+.tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--green-l);color:var(--green-t)}
+.log-item{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-l{display:flex;gap:12px;align-items:flex-start}
+.ava{width:36px;height:36px;border-radius:50%;background:var(--green-l);color:var(--green-t);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.log-name{font-size:14px;font-weight:500;margin-bottom:5px}
+.log-tags{display:flex;flex-wrap:wrap;gap:5px}
+.log-qty{font-size:20px;font-weight:600}
+.log-actions{display:flex;align-items:center;gap:8px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--rl);width:100%;max-width:460px;box-shadow:var(--shm)}
+.modal-hd{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--t2);line-height:1}
+.modal-body{padding:22px}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.edit-row{display:grid;grid-template-columns:1fr 90px 34px;gap:8px;margin-bottom:8px;align-items:center}
+.hist-dh{display:flex;justify-content:space-between;align-items:center;margin:20px 0 8px}
+.hist-dl{font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.06em}
+.hist-dt{font-size:13px;font-weight:600;color:var(--green)}
+.ml-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.ml-item:last-child{border-bottom:none}
+.inline-add{display:flex;gap:8px;margin-top:12px}
+.inline-add input{flex:1}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--r);font-size:14px;font-weight:500;box-shadow:var(--shm);transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);z-index:999;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green);color:#fff}
+.toast.error{background:var(--red);color:#fff}
+.toast.info{background:var(--text);color:#fff}
+.spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+.spin.dark{border-color:rgba(0,0,0,.12);border-top-color:var(--green);width:18px;height:18px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:28px 16px;color:var(--t2);font-size:14px}
+@media(max-width:560px){.frow{grid-template-columns:1fr}.mgrp{grid-template-columns:1fr 1fr}.wrap{padding:14px 12px 80px}.tb{font-size:12px;padding:8px 4px}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="brand">
+    <div class="brand-ico"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg></div>
+    <div><div class="brand-name">Production Tracker</div><div class="brand-sub">Karigar-Level Monitoring</div></div>
+  </div>
+  <div class="conn"><div class="dot" id="dot"></div><span id="conn-txt">Connecting...</span></div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tb active" onclick="switchTab('entry')">Daily Entry</button>
+    <button class="tb" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tb" onclick="switchTab('history')">History</button>
+    <button class="tb" onclick="switchTab('manage')">Manage</button>
+  </div>
+
+  <!-- ENTRY -->
+  <div id="sec-entry" class="sec active">
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.89 3 3 3.9 3 5v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>Log Production Entry</div>
+      <div class="frow">
+        <div class="field"><label class="lbl">Date</label><input type="date" id="e-date"/></div>
+        <div class="field"><label class="lbl">Karigar</label><select id="e-karigar"><option value="">Select karigar...</option></select></div>
+      </div>
+      <div class="sku-hd"><span>SKU / Style</span><span style="text-align:center">Qty (pcs)</span><span></span></div>
+      <div id="sku-rows"></div>
+      <button class="add-sku-btn" onclick="addSkuRow()">+ Add SKU</button>
+      <button class="btn primary" style="width:100%" id="save-btn" onclick="saveEntry()">Save Entry to Google Sheet</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>Today's Entries <span id="today-lbl" style="font-weight:400;color:var(--t2);font-size:13px;margin-left:4px"></span></div>
+      <div id="today-list"><div class="empty">No entries logged yet.</div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="sec-dashboard" class="sec">
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:18px">
+        <div class="field" style="flex:1"><label class="lbl">Date</label><input type="date" id="dash-date"/></div>
+        <button class="btn sm" onclick="dashToday()">Today</button>
+        <button class="btn sm primary" onclick="loadDashboard()">Refresh</button>
+      </div>
+      <div class="mgrp" id="dash-metrics">
+        <div class="mcard"><div class="mval">—</div><div class="mlbl">Total pieces</div></div>
+        <div class="mcard"><div class="mval">—</div><div class="mlbl">Karigars active</div></div>
+        <div class="mcard"><div class="mval">—</div><div class="mlbl">SKUs worked</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3z"/></svg>Karigar-wise output</div><div id="dash-k"><div class="empty">Click Refresh to load.</div></div></div>
+    <div class="card"><div class="card-title"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>SKU-wise totals</div><div id="dash-s"><div class="empty">Click Refresh to load.</div></div></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="sec-history" class="sec">
+    <div class="card" style="padding:16px 22px">
+      <div class="frow">
+        <div class="field"><label class="lbl">From</label><input type="date" id="h-from"/></div>
+        <div class="field"><label class="lbl">To</label><input type="date" id="h-to"/></div>
+      </div>
+      <button class="btn primary sm" onclick="loadHistory()">Search</button>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <!-- MANAGE -->
+  <div id="sec-manage" class="sec">
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3z"/></svg>Karigars</div>
+      <div id="k-list"></div>
+      <div class="inline-add"><input type="text" id="new-k" placeholder="Karigar name..."/><button class="btn primary" onclick="addKarigar()">Add</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>SKUs / Styles</div>
+      <div id="sku-list"></div>
+      <div class="inline-add"><input type="text" id="new-sku" placeholder="SKU / Style name..."/><button class="btn primary" onclick="addSkuItem()">Add</button></div>
+    </div>
+    <div class="card" style="border-color:#F5C6C2">
+      <div class="card-title" style="color:var(--red)"><svg viewBox="0 0 24 24" style="fill:var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Danger Zone</div>
+      <button class="btn xs danger" onclick="clearLocal()">Reset local settings (karigar & SKU lists only)</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="edit-overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">Edit Entry</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="edit-info" style="font-size:13px;color:var(--t2);margin-bottom:16px"></div>
+      <div id="edit-rows"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn sm" onclick="closeModal()">Cancel</button>
+      <button class="btn sm primary" id="edit-save-btn" onclick="saveEdits()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8Gp16-gosN9LIQFy63_8fEQY_dtk4YFZ3y8YrCf_los8a0sdcUoXgWGpUBtSUktK6hg/exec';
+
+var karigars = JSON.parse(localStorage.getItem('pt-k') || '["Karigar A","Karigar B","Karigar C"]');
+var skus     = JSON.parse(localStorage.getItem('pt-s') || '["SKU A","SKU B","SKU C"]');
+var skuN = 0;
+var editEntry = null;
+
+// ─── JSONP CALL (solves CORS completely) ──────────────────────
+var _cbCount = 0;
+function api(params, callback) {
+  var cbName = '_cb' + (++_cbCount);
+  params.callback = cbName;
+  var qs = Object.keys(params).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(
+      typeof params[k] === 'object' ? JSON.stringify(params[k]) : params[k]
+    );
+  }).join('&');
+  var script = document.createElement('script');
+  script.src = SCRIPT_URL + '?' + qs;
+  window[cbName] = function(data) {
+    delete window[cbName];
+    document.body.removeChild(script);
+    callback(null, data);
+  };
+  script.onerror = function() {
+    delete window[cbName];
+    document.body.removeChild(script);
+    callback(new Error('Network error'));
+  };
+  document.body.appendChild(script);
+}
+
+// ─── UTILS ────────────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0,10); }
+function ini(n) { return n.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase(); }
+function fmtDate(s) {
+  var d = new Date(s + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+var _tt;
+function toast(msg, type) {
+  type = type || 'success';
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast ' + type + ' show';
+  clearTimeout(_tt); _tt = setTimeout(function(){ el.className = 'toast ' + type; }, 3200);
+}
+
+// ─── TABS ─────────────────────────────────────────────────────
+function switchTab(t) {
+  var tabs = ['entry','dashboard','history','manage'];
+  document.querySelectorAll('.tb').forEach(function(b,i){ b.classList.toggle('active', tabs[i]===t); });
+  document.querySelectorAll('.sec').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('sec-'+t).classList.add('active');
+  if (t==='dashboard') loadDashboard();
+  if (t==='history')   loadHistory();
+  if (t==='manage')    renderManage();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+function init() {
+  var t = today();
+  document.getElementById('e-date').value = t;
+  document.getElementById('dash-date').value = t;
+  document.getElementById('today-lbl').textContent = fmtDate(t);
+  var from = new Date(); from.setDate(from.getDate()-30);
+  document.getElementById('h-from').value = from.toISOString().slice(0,10);
+  document.getElementById('h-to').value = t;
+  fillKDrop();
+  addSkuRow();
+  checkConn();
+  loadToday();
+  document.getElementById('e-date').addEventListener('change', function(){
+    document.getElementById('today-lbl').textContent = fmtDate(this.value);
+    loadToday();
+  });
+}
+
+// ─── CONNECTION CHECK ─────────────────────────────────────────
+function checkConn() {
+  api({action:'ping'}, function(err, data) {
+    var dot = document.getElementById('dot');
+    var txt = document.getElementById('conn-txt');
+    if (!err && data && data.status === 'ok') {
+      dot.className = 'dot ok';
+      txt.textContent = 'Connected to Sheet';
+    } else {
+      dot.className = 'dot err';
+      txt.textContent = 'Connection error';
+    }
+  });
+}
+
+// ─── KARIGAR DROPDOWN ─────────────────────────────────────────
+function fillKDrop() {
+  var sel = document.getElementById('e-karigar');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">Select karigar...</option>' +
+    karigars.map(function(k){ return '<option value="'+k+'"'+(k===cur?' selected':'')+'>'+k+'</option>'; }).join('');
+}
+
+// ─── SKU ROWS ─────────────────────────────────────────────────
+function addSkuRow(sv, qv) {
+  sv = sv||''; qv = qv||'';
+  skuN++;
+  var id = 'sr-'+skuN;
+  var d = document.createElement('div');
+  d.className = 'sku-r'; d.id = id;
+  d.innerHTML =
+    '<select class="sku-sel">' +
+      '<option value="">Select SKU...</option>' +
+      skus.map(function(s){ return '<option value="'+s+'"'+(s===sv?' selected':'')+'>'+s+'</option>'; }).join('') +
+    '</select>' +
+    '<input type="number" min="1" max="9999" placeholder="0" value="'+qv+'" class="sku-qty" style="text-align:center"/>' +
+    '<button class="ico-btn" onclick="document.getElementById(\''+id+'\').remove()">×</button>';
+  document.getElementById('sku-rows').appendChild(d);
+}
+
+// ─── SAVE ENTRY ───────────────────────────────────────────────
+function saveEntry() {
+  var date    = document.getElementById('e-date').value;
+  var karigar = document.getElementById('e-karigar').value;
+  if (!date || !karigar) { toast('Select date and karigar', 'error'); return; }
+
+  var items = [];
+  document.querySelectorAll('.sku-r').forEach(function(row) {
+    var sku = row.querySelector('.sku-sel').value;
+    var qty = parseInt(row.querySelector('.sku-qty').value);
+    if (sku && qty > 0) items.push({sku:sku, qty:qty});
+  });
+  if (!items.length) { toast('Add at least one SKU with quantity', 'error'); return; }
+
+  var btn = document.getElementById('save-btn');
+  btn.innerHTML = '<span class="spin"></span> Saving...'; btn.disabled = true;
+
+  api({action:'addEntry', data:{date:date, karigar:karigar, items:items}}, function(err, r) {
+    btn.innerHTML = 'Save Entry to Google Sheet'; btn.disabled = false;
+    if (!err && r && r.status === 'ok') {
+      toast('Entry saved ✓');
+      document.getElementById('sku-rows').innerHTML = '';
+      skuN = 0; addSkuRow();
+      loadToday();
+    } else {
+      toast('Error: ' + (r && r.message ? r.message : 'Could not save'), 'error');
+    }
+  });
+}
+
+// ─── TODAY ENTRIES ────────────────────────────────────────────
+function loadToday() {
+  var date = document.getElementById('e-date').value || today();
+  api({action:'getByDate', date:date}, function(err, r) {
+    renderList('today-list', r && r.entries ? r.entries : [], date, true);
+  });
+}
+
+// ─── RENDER ENTRY LIST ────────────────────────────────────────
+function renderList(elId, entries, date, showActions) {
+  var el = document.getElementById(elId);
+  if (!entries.length) { el.innerHTML = '<div class="empty">No entries for this date.</div>'; return; }
+  el.innerHTML = entries.map(function(e) {
+    var total = e.items.reduce(function(s,i){return s+i.qty;},0);
+    var tags = e.items.map(function(i){return '<span class="tag">'+i.sku+': '+i.qty+'</span>';}).join('');
+    var actions = showActions
+      ? '<div class="log-actions">' +
+          '<div class="log-qty">'+total+'</div>' +
+          '<button class="btn xs" onclick=\'openEdit('+JSON.stringify(e)+')\'>Edit</button>' +
+          '<button class="btn xs danger" onclick="delEntry(\''+date+'\',\''+e.karigar+'\')">Delete</button>' +
+        '</div>'
+      : '<div class="log-qty">'+total+'</div>';
+    return '<div class="log-item">' +
+      '<div class="log-l"><div class="ava">'+ini(e.karigar)+'</div>' +
+      '<div><div class="log-name">'+e.karigar+'</div><div class="log-tags">'+tags+'</div></div></div>' +
+      actions + '</div>';
+  }).join('');
+}
+
+// ─── EDIT MODAL ───────────────────────────────────────────────
+function openEdit(entry) {
+  editEntry = JSON.parse(JSON.stringify(entry));
+  document.getElementById('edit-info').innerHTML = '<strong>'+entry.karigar+'</strong> — '+fmtDate(entry.date);
+  var rows = document.getElementById('edit-rows');
+  rows.innerHTML = '';
+  entry.items.forEach(function(item, idx) {
+    var d = document.createElement('div');
+    d.className = 'edit-row';
+    d.innerHTML =
+      '<div style="font-size:14px;font-weight:500">'+item.sku+'</div>' +
+      '<input type="number" min="0" max="9999" value="'+item.qty+'" style="text-align:center" data-idx="'+idx+'" class="eq"/>' +
+      '<button class="ico-btn" onclick="delRowModal(\''+item.rowId+'\',this)">×</button>';
+    rows.appendChild(d);
+  });
+  document.getElementById('edit-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('edit-overlay').classList.remove('open'); editEntry = null; }
+function overlayClick(e) { if (e.target === document.getElementById('edit-overlay')) closeModal(); }
+
+function delRowModal(rowId, btn) {
+  btn.disabled = true; btn.textContent = '…';
+  api({action:'deleteRow', data:{rowId:rowId}}, function(err, r) {
+    if (!err && r && r.status==='ok') {
+      btn.closest('.edit-row').remove();
+      toast('Row removed');
+      loadToday(); refreshIfVisible();
+    } else { toast('Error removing row', 'error'); btn.disabled=false; btn.textContent='×'; }
+  });
+}
+
+function saveEdits() {
+  var inputs = document.querySelectorAll('.eq');
+  var btn = document.getElementById('edit-save-btn');
+  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  var pending = inputs.length;
+  if (!pending) { closeModal(); btn.innerHTML='Save Changes'; btn.disabled=false; return; }
+  var hasError = false;
+  inputs.forEach(function(inp) {
+    var idx = parseInt(inp.dataset.idx);
+    var qty = parseInt(inp.value);
+    var rowId = editEntry.items[idx].rowId;
+    api({action:'updateRow', data:{rowId:rowId, qty:qty}}, function(err, r) {
+      if (err || !r || r.status!=='ok') hasError = true;
+      pending--;
+      if (pending === 0) {
+        btn.innerHTML = 'Save Changes'; btn.disabled = false;
+        if (hasError) { toast('Some rows failed to save', 'error'); }
+        else { toast('Changes saved ✓'); closeModal(); loadToday(); refreshIfVisible(); }
+      }
+    });
+  });
+}
+
+function delEntry(date, karigar) {
+  if (!confirm('Delete ALL entries for '+karigar+' on '+fmtDate(date)+'?')) return;
+  api({action:'deleteEntry', data:{date:date, karigar:karigar}}, function(err, r) {
+    if (!err && r && r.status==='ok') { toast('Entry deleted'); loadToday(); refreshIfVisible(); }
+    else toast('Error deleting entry', 'error');
+  });
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────
+function dashToday() { document.getElementById('dash-date').value = today(); loadDashboard(); }
+function refreshIfVisible() {
+  if (document.getElementById('sec-dashboard').classList.contains('active')) loadDashboard();
+  if (document.getElementById('sec-history').classList.contains('active')) loadHistory();
+}
+
+function loadDashboard() {
+  var date = document.getElementById('dash-date').value || today();
+  document.getElementById('dash-metrics').innerHTML =
+    '<div class="mcard"><div class="mval"><span class="spin dark"></span></div><div class="mlbl">Loading...</div></div>' +
+    '<div class="mcard"></div><div class="mcard"></div>';
+
+  api({action:'getByDate', date:date}, function(err, r) {
+    var entries = r && r.entries ? r.entries : [];
+    var total = entries.reduce(function(s,e){return s+e.items.reduce(function(ss,i){return ss+i.qty;},0);},0);
+    var skuSet = {};
+    entries.forEach(function(e){e.items.forEach(function(i){skuSet[i.sku]=1;});});
+
+    document.getElementById('dash-metrics').innerHTML =
+      '<div class="mcard"><div class="mval">'+total+'</div><div class="mlbl">Total pieces</div></div>' +
+      '<div class="mcard"><div class="mval">'+entries.length+'</div><div class="mlbl">Karigars active</div></div>' +
+      '<div class="mcard"><div class="mval">'+Object.keys(skuSet).length+'</div><div class="mlbl">SKUs worked</div></div>';
+
+    var kTot = {};
+    entries.forEach(function(e){ kTot[e.karigar]=(kTot[e.karigar]||0)+e.items.reduce(function(s,i){return s+i.qty;},0); });
+    var maxK = Math.max.apply(null, Object.values(kTot).concat([1]));
+    var kEl = document.getElementById('dash-k');
+    kEl.innerHTML = Object.keys(kTot).length
+      ? Object.entries(kTot).sort(function(a,b){return b[1]-a[1];}).map(function(kv){
+          return '<div class="bar-row"><div class="bar-info"><span class="bar-name">'+kv[0]+'</span><span class="bar-v">'+kv[1]+' pcs</span></div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(kv[1]/maxK*100)+'%"></div></div></div>';
+        }).join('')
+      : '<div class="empty">No data for this date.</div>';
+
+    var sTot = {};
+    entries.forEach(function(e){e.items.forEach(function(i){sTot[i.sku]=(sTot[i.sku]||0)+i.qty;});});
+    var maxS = Math.max.apply(null, Object.values(sTot).concat([1]));
+    var sEl = document.getElementById('dash-s');
+    sEl.innerHTML = Object.keys(sTot).length
+      ? Object.entries(sTot).sort(function(a,b){return b[1]-a[1];}).map(function(kv){
+          return '<div class="bar-row"><div class="bar-info"><span class="bar-name"><span class="tag">'+kv[0]+'</span></span><span class="bar-v">'+kv[1]+' pcs</span></div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(kv[1]/maxS*100)+'%"></div></div></div>';
+        }).join('')
+      : '<div class="empty">No SKU data.</div>';
+  });
+}
+
+// ─── HISTORY ──────────────────────────────────────────────────
+function loadHistory() {
+  var from = document.getElementById('h-from').value;
+  var to   = document.getElementById('h-to').value;
+  var el   = document.getElementById('hist-list');
+  el.innerHTML = '<div class="empty">Loading...</div>';
+
+  api({action:'getRange', from:from, to:to}, function(err, r) {
+    var entries = r && r.entries ? r.entries : [];
+    if (!entries.length) { el.innerHTML = '<div class="empty">No records found.</div>'; return; }
+    var grouped = {};
+    entries.forEach(function(e){ (grouped[e.date]=grouped[e.date]||[]).push(e); });
+    el.innerHTML = Object.keys(grouped).sort(function(a,b){return b.localeCompare(a);}).map(function(date) {
+      var dayE = grouped[date];
+      var dayTot = dayE.reduce(function(s,e){return s+e.items.reduce(function(ss,i){return ss+i.qty;},0);},0);
+      var rows = dayE.map(function(e) {
+        var total = e.items.reduce(function(s,i){return s+i.qty;},0);
+        var tags = e.items.map(function(i){return '<span class="tag">'+i.sku+': '+i.qty+'</span>';}).join('');
+        return '<div class="log-item">' +
+          '<div class="log-l"><div class="ava">'+ini(e.karigar)+'</div>' +
+          '<div><div class="log-name">'+e.karigar+'</div><div class="log-tags">'+tags+'</div></div></div>' +
+          '<div class="log-actions"><div class="log-qty">'+total+'</div>' +
+          '<button class="btn xs" onclick=\'openEdit('+JSON.stringify(e)+')\'>Edit</button>' +
+          '<button class="btn xs danger" onclick="delEntry(\''+date+'\',\''+e.karigar+'\')">Delete</button>' +
+          '</div></div>';
+      }).join('');
+      return '<div class="hist-dh"><div class="hist-dl">'+fmtDate(date)+'</div><div class="hist-dt">'+dayTot+' pcs</div></div>' +
+        '<div class="card" style="padding:0 16px">'+rows+'</div>';
+    }).join('');
+  });
+}
+
+// ─── MANAGE ───────────────────────────────────────────────────
+function renderManage() {
+  document.getElementById('k-list').innerHTML = karigars.length
+    ? karigars.map(function(k,i){
+        return '<div class="ml-item"><div style="display:flex;align-items:center;gap:10px"><div class="ava" style="width:28px;height:28px;font-size:10px">'+ini(k)+'</div>'+k+'</div>' +
+          '<button class="btn xs danger" onclick="removeK('+i+')">Remove</button></div>';
+      }).join('')
+    : '<div style="font-size:13px;color:var(--t3);padding:8px 0">None added yet.</div>';
+
+  document.getElementById('sku-list').innerHTML = skus.length
+    ? skus.map(function(s,i){
+        return '<div class="ml-item"><span class="tag">'+s+'</span>' +
+          '<button class="btn xs danger" onclick="removeSku('+i+')">Remove</button></div>';
+      }).join('')
+    : '<div style="font-size:13px;color:var(--t3);padding:8px 0">None added yet.</div>';
+}
+
+function addKarigar() {
+  var inp = document.getElementById('new-k');
+  var n = inp.value.trim(); if (!n) return;
+  if (karigars.indexOf(n)>-1) { toast('Already exists','error'); return; }
+  karigars.push(n); localStorage.setItem('pt-k', JSON.stringify(karigars));
+  inp.value=''; fillKDrop(); renderManage(); toast(n+' added');
+}
+function removeK(i) { karigars.splice(i,1); localStorage.setItem('pt-k',JSON.stringify(karigars)); fillKDrop(); renderManage(); }
+function addSkuItem() {
+  var inp = document.getElementById('new-sku');
+  var n = inp.value.trim(); if (!n) return;
+  if (skus.indexOf(n)>-1) { toast('Already exists','error'); return; }
+  skus.push(n); localStorage.setItem('pt-s', JSON.stringify(skus));
+  inp.value=''; renderManage(); toast(n+' added');
+}
+function removeSku(i) { skus.splice(i,1); localStorage.setItem('pt-s',JSON.stringify(skus)); renderManage(); }
+function clearLocal() {
+  if (!confirm('Reset karigar and SKU lists? Sheet data will NOT be deleted.')) return;
+  localStorage.clear(); location.reload();
+}
+
+init();
+</script>
+</body>
+</html>
