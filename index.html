@@ -76,6 +76,17 @@ select:focus,input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:26px 14px;color:var(--t2);font-size:14px}
 .info{font-size:12px;color:var(--t2);margin-bottom:12px;line-height:1.6;background:var(--grl);border-radius:var(--r);padding:10px 12px;}
+/* SEARCHABLE DROPDOWN */
+.sd-wrap{position:relative;width:100%}
+.sd-input{height:40px;padding:0 32px 0 12px;font-size:14px;font-family:'DM Sans',sans-serif;border:1px solid var(--bdrs);border-radius:var(--r);background:var(--bg);color:var(--tx);width:100%;outline:none;transition:border-color .15s,box-shadow .15s;cursor:pointer}
+.sd-input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106,79,.12);background:#fff}
+.sd-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--t2);font-size:12px}
+.sd-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--sur);border:1px solid var(--bdrs);border-radius:var(--r);box-shadow:var(--shm);z-index:50;max-height:200px;overflow-y:auto;display:none}
+.sd-list.open{display:block}
+.sd-item{padding:10px 12px;font-size:14px;cursor:pointer;transition:background .1s}
+.sd-item:hover,.sd-item.active{background:var(--grl);color:var(--grt);font-weight:500}
+.sd-item.none{color:var(--t3);cursor:default;font-style:italic}
+.sd-item.none:hover{background:transparent;color:var(--t3);font-weight:400}
 @media(max-width:540px){.frow{grid-template-columns:1fr}.mg{grid-template-columns:1fr 1fr}.wrap{padding:14px 12px 80px}.tb{font-size:11px;padding:8px 3px}}
 </style>
 </head>
@@ -100,7 +111,14 @@ select:focus,input:focus{border-color:var(--gr);box-shadow:0 0 0 3px rgba(45,106
       <div class="ct"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.89 3 3 3.9 3 5v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>Log Production Entry</div>
       <div class="frow">
         <div class="field"><label class="lbl">Date</label><input type="date" id="e-date"/></div>
-        <div class="field"><label class="lbl">Karigar</label><select id="e-kar"><option value="">Loading...</option></select></div>
+        <div class="field"><label class="lbl">Karigar</label>
+          <div class="sd-wrap">
+            <input type="text" class="sd-input" id="e-kar-inp" placeholder="Search karigar..." autocomplete="off"/>
+            <span class="sd-arrow">&#9662;</span>
+            <div class="sd-list" id="e-kar-dd"></div>
+          </div>
+          <input type="hidden" id="e-kar"/>
+        </div>
       </div>
       <div class="shd"><span>SKU / Style</span><span style="text-align:center">Qty</span><span></span></div>
       <div id="sku-rows"></div>
@@ -236,20 +254,74 @@ function loadLists(cb){
 }
 
 function fillKDrop(){
-  var sel=document.getElementById('e-kar'),cur=sel.value;
-  sel.innerHTML='<option value="">Select karigar...</option>'+
-    karigars.map(function(k){return '<option value="'+esc(k)+'"'+(k===cur?' selected':'')+'>'+esc(k)+'</option>';}).join('');
+  // Karigar searchable dropdown
+  var inp=document.getElementById('e-kar-inp');
+  var hid=document.getElementById('e-kar');
+  var dd=document.getElementById('e-kar-dd');
+  if(inp&&dd){sdBind(inp,hid,dd,function(){return karigars;});}
+}
+
+// ── SEARCHABLE DROPDOWN ENGINE ────────────────────────────────
+function sdBind(inp,hid,dd,getList){
+  function render(filter){
+    var list=getList();
+    var q=(filter||'').toLowerCase();
+    var matches=list.filter(function(x){return x.toLowerCase().indexOf(q)>-1;});
+    if(!matches.length){
+      dd.innerHTML='<div class="sd-item none">No results</div>';
+    } else {
+      dd.innerHTML=matches.map(function(x){
+        return '<div class="sd-item" data-val="'+esc(x)+'">'+esc(x)+'</div>';
+      }).join('');
+      dd.querySelectorAll('.sd-item').forEach(function(item){
+        item.addEventListener('mousedown',function(e){
+          e.preventDefault();
+          inp.value=item.dataset.val;
+          hid.value=item.dataset.val;
+          dd.classList.remove('open');
+        });
+      });
+    }
+    dd.classList.add('open');
+  }
+  inp.addEventListener('input',function(){
+    hid.value='';
+    render(inp.value);
+  });
+  inp.addEventListener('focus',function(){
+    render(inp.value);
+  });
+  inp.addEventListener('blur',function(){
+    setTimeout(function(){
+      dd.classList.remove('open');
+      // If typed text exactly matches an item, keep it; otherwise clear
+      var list=getList();
+      var found=list.filter(function(x){return x.toLowerCase()===inp.value.toLowerCase();});
+      if(found.length){inp.value=found[0];hid.value=found[0];}
+      else if(!hid.value){inp.value='';}
+    },150);
+  });
 }
 
 function addSR(sv,qv){
   sv=sv||'';qv=qv||'';srN++;
   var id='sr'+srN,d=document.createElement('div');
   d.className='sr';d.id=id;
-  d.innerHTML='<select class="ss"><option value="">Select SKU...</option>'+
-    skus.map(function(s){return '<option value="'+esc(s)+'"'+(s===sv?' selected':'')+'>'+esc(s)+'</option>';}).join('')+
-    '</select><input type="number" min="1" max="9999" placeholder="0" value="'+qv+'" class="sq" style="text-align:center"/>'+
-    '<button class="ico" onclick="document.getElementById(\''+id+'\').remove()">x</button>';
+  d.innerHTML=
+    '<div class="sd-wrap">'+
+      '<input type="text" class="sd-input sku-inp" placeholder="Search SKU..." autocomplete="off"/>'+
+      '<span class="sd-arrow">&#9662;</span>'+
+      '<div class="sd-list sku-dd" id="dd-'+id+'"></div>'+
+    '</div>'+
+    '<input type="hidden" class="ss" value=""/>'+
+    '<input type="number" min="1" max="9999" placeholder="0" value="'+qv+'" class="sq" style="text-align:center"/>'+
+    '<button class="ico" onclick="document.getElementById(''+id+'').remove()">x</button>';
   document.getElementById('sku-rows').appendChild(d);
+  var inp=d.querySelector('.sku-inp');
+  var hid=d.querySelector('.ss');
+  var dd=d.querySelector('.sku-dd');
+  if(sv){inp.value=sv;hid.value=sv;}
+  sdBind(inp,hid,dd,function(){return skus;});
 }
 
 function saveEntry(){
