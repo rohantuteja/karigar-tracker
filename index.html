@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <title>Karigar Production Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -344,6 +347,22 @@ function init(){
   document.getElementById('e-date').addEventListener('change',function(){
     document.getElementById('tlbl').textContent=fmt(this.value);loadToday();
   });
+  // Refresh dates when app becomes visible again (e.g. after sleep/new day)
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden){
+      var nt=td();
+      var ed=document.getElementById('e-date');
+      // Only reset to today if user hadn't manually picked a different date
+      if(ed.dataset.lastT && ed.value===ed.dataset.lastT && ed.value!==nt){
+        ed.value=nt;
+        ed.dataset.lastT=nt;
+        document.getElementById('tlbl').textContent=fmt(nt);
+        loadToday();
+      }
+    }
+  });
+  // Track that this was the auto-set today value
+  document.getElementById('e-date').dataset.lastT=t;
 }
 
 /* ── LISTS FROM SHEET ── */
