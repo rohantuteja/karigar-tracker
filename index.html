@@ -242,7 +242,7 @@ function api(p,cb){
 }
 
 /* ── UTILS ── */
-function td(){return new Date().toISOString().slice(0,10);}
+function td(){var d=new Date();var y=d.getFullYear();var m=d.getMonth()+1;var dd=d.getDate();return y+'-'+(m<10?'0'+m:m)+'-'+(dd<10?'0'+dd:dd);}
 function ini(n){return(n||'').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase()||'?';}
 function fmt(s){if(!s)return'';var d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -350,7 +350,8 @@ function init(){
   document.getElementById('dash-to').value=t;
   document.getElementById('tlbl').textContent=fmt(t);
   var f=new Date();f.setDate(f.getDate()-30);
-  document.getElementById('h-from').value=f.toISOString().slice(0,10);
+  var fy=f.getFullYear(),fm=f.getMonth()+1,fd=f.getDate();
+  document.getElementById('h-from').value=fy+'-'+(fm<10?'0'+fm:fm)+'-'+(fd<10?'0'+fd:fd);
   document.getElementById('h-to').value=t;
   api({action:'ping'},function(err,r){
     var dot=document.getElementById('dot'),txt=document.getElementById('ctxt');
