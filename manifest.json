@@ -1,0 +1,19 @@
+{
+  "name": "Brune Production Tracker",
+  "short_name": "Brune Tracker",
+  "description": "Karigar-level production monitoring",
+  "start_url": "/karigar-tracker/",
+  "scope": "/karigar-tracker/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F5F0",
+  "theme_color": "#694533",
+  "icons": [
+    {
+      "src": "logo.jpg",
+      "sizes": "300x300",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
