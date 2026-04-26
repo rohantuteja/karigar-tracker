@@ -211,10 +211,6 @@ input[type=date]:focus,input[type=text]:focus,input[type=number]:focus{border-co
       <div id="s-list"><div class="empty">Loading...</div></div>
       <div class="iadd"><input type="text" id="new-s" placeholder="SKU / Style name..."/><button class="btn pr" onclick="addS()">Add</button></div>
     </div>
-    <div class="card" style="border-color:#F5C6C2">
-      <div class="ct" style="color:var(--rd)"><svg viewBox="0 0 24 24" style="fill:var(--rd)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Danger Zone</div>
-      <button class="btn xs dr" onclick="clearLocal()">Reset local settings</button>
-    </div>
   </div>
 </div>
 
@@ -671,7 +667,6 @@ function removeS(name){
     else toast('Error','error');
   });
 }
-function clearLocal(){if(!confirm('Reset local settings?'))return;localStorage.clear();location.reload();}
 
 init();
 </script>
